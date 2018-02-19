@@ -19,12 +19,23 @@ func NewServer(work func()) *MockServer {
 	}
 }
 
+// NewServerIntervals ... creates a NewServer with input workInterval and lifeTime
+func NewServerIntervals(work func(), workInterval, lifeTime time.Duration) *MockServer {
+	return &MockServer{
+		Work:         work,
+		WorkInterval: workInterval,
+		LifeTime:     lifeTime,
+	}
+}
+
 // Serve ... serves mock server
 func (server *MockServer) Serve() {
 	exit := make(chan struct{})
-	select {
-	case <-time.Tick(server.LifeTime):
-		close(exit)
-	}
+	go func() {
+		select {
+		case <-time.After(server.LifeTime):
+			close(exit)
+		}
+	}()
 	WasteTime(server.Work, server.WorkInterval, exit)
 }
